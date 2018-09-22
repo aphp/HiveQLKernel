@@ -1,2 +1,7 @@
-# HiveJupyterKernel
-Hive Jupyter Kernel
+# HiveQL Kernel
+
+
+```
+pip install .
+jupyter hiveql install --user
+```
