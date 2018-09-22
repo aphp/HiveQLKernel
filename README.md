@@ -1,0 +1,2 @@
+# HiveJupyterKernel
+Hive Jupyter Kernel
