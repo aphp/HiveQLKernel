@@ -1,3 +1,7 @@
-ipykernel==4.9.0
-jupyter_client==5.2.3
-jupyter_core==4.4.0
+ipykernel==4.*
+jupyter_client==5.*
+jupyter_core==4.*
+pandas==0.23.*
+pyhive==0.6.*
+sasl==0.2.*
+thrift_sasl==0.3.*
