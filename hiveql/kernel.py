@@ -142,6 +142,12 @@ class HiveQLKernel(Kernel):
             'data': {
                 "text/html": html,
             },
+            "metadata": {
+                "image/png": {
+                    "width": 640,
+                    "height": 480,
+                },
+            }
         })
 
         return {
