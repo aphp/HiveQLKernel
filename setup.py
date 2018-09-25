@@ -15,11 +15,11 @@ with open(path.join(here, 'README.md')) as f:
 from hiveql.constants import __version__, KERNEL_NAME, DISPLAY_NAME
 
 setup(
-    name=KERNEL_NAME,
+    name=KERNEL_NAME + "Kernel",
     version=__version__,
     description=DISPLAY_NAME + ' Kernel',
     long_description=long_description,
-    url='https://github.com/EDS-APHP/HiveJupyterKernel',
+    url='https://github.com/EDS-APHP/HiveQLKernel',
     author='APHP - EDS',
     license='MIT',
     keywords='Hive HiveQL PyHive Kernel Ipykernel',
