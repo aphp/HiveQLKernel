@@ -19,7 +19,7 @@ class KernelSyntaxError(Exception):
 
 
 error_con_not_created = """Connection not initialized!
-Please specify your pyHive configuration like this (if you want to update the current connection, just type it again with another configuration):
+Please specify your pyHive configuration like this :
 
 -------------
 $$ url=hive://<kerberos-username>@<hive-host>:<hive-port>/<db-name>
@@ -29,6 +29,15 @@ $$ max_overflow=10
 
 YOUR SQL REQUEST HERE IF ANY
 -------------
+
+-> if you want to update the current connection, just type it again with another configuration
+-> $$ are mandatory characters that specify that this line is a configuration for this kernel
+
+Other parameters are available such as :
+
+$$ default_limit=50 # -> without this parameter, default_limit is set to 20
+$$ display_mode=be # -> this will display a table with the beginning (b) and end (e) of the SQL response (options are: b, e and be)
+
 """
 
 
@@ -49,10 +58,18 @@ class HiveQLKernel(Kernel):
         'file_extension': '.hiveql',
     }
     last_conn = None
+    params = {
+        "default_limit": 20,
+        "display_mode": "be"
+    }
+
 
     def send_exception(self, e):
-        tb = traceback.format_exc()
-        return self.send_error(str(e) + '\n' + tb)
+        if type(e) in [ConnectionNotCreated]:
+            tb = ""
+        else:
+            tb = "\n" + traceback.format_exc()
+        return self.send_error(str(e) + tb)
 
     def send_error(self, contents):
         self.send_response(self.iopub_socket, 'stream', {
@@ -78,6 +95,20 @@ class HiveQLKernel(Kernel):
         self.last_conn = create_engine(url, **kwargs)
         self.last_conn.connect()
         self.send_info("Connection established to database!\n")
+
+    def reconfigure(self, params):
+        if 'default_limit' in params:
+            try:
+                self.params['default_limit'] = int(params['default_limit'])
+                self.send_info("Set display limit to {}".format(self.params['default_limit']))
+            except ValueError as e:
+                self.send_exception(e)
+        if 'display_mode' in params:
+            v = params['display_mode']
+            if type(v) == str and v in ['b', 'e', 'be']:
+                self.params['display_mode'] = v
+            else:
+                self.send_error("Invalid display_mode, options are b, e and be.")
 
     def parse_code(self, code):
         req = code.strip()
@@ -109,14 +140,19 @@ class HiveQLKernel(Kernel):
         if sql_req.endswith(';'):
             sql_req = sql_req[:-1]
 
-        return headers, sql_req
+        a = ['default_limit', 'display_mode']
+        params, pyhiveconf = {k: v for k, v in headers.items() if k in a}, {k: v for k, v in headers.items() if k not in a}
+
+        self.reconfigure(params)
+
+        return pyhiveconf, sql_req
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         try:
-            headers, sql_req = self.parse_code(code)
+            pyhiveconf, sql_req = self.parse_code(code)
 
-            if 'url' in headers:
-                self.create_conn(**headers)
+            if 'url' in pyhiveconf:
+                self.create_conn(**pyhiveconf)
 
             if self.last_conn is None:
                 raise ConnectionNotCreated()
@@ -129,6 +165,14 @@ class HiveQLKernel(Kernel):
                     'payload': [],
                     'user_expressions': {}
                 }
+
+            if self.params['default_limit'] > 0 and (sql_req.startswith('select') or sql_req.startswith('with')):
+                sql_req = "select * from ({}) hzykwyxnbv limit {}".format(sql_req, self.params['default_limit'])
+            logger.info("Running the following HiveQL query: {}".format(sql_req))
+            # todo
+            # if self.params['display_mode'] == 'b':
+            # if self.params['display_mode'] == 'e':
+            # if self.params['display_mode'] == 'be':
 
             html = pd.read_sql(sql_req, self.last_conn).to_html()
         except OperationalError as oe:
