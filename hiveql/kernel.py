@@ -3,7 +3,7 @@ import logging
 import traceback
 
 from ipykernel.kernelbase import Kernel
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, ResourceClosedError
 
 from .constants import __version__, KERNEL_NAME
 
@@ -50,11 +50,12 @@ class HiveQLKernel(Kernel):
     implementation = KERNEL_NAME
     implementation_version = __version__
     banner = 'HiveQL REPL'
+    language = "hiveql"
     language_info = {
         'name': 'hive',
-        'codemirror_mode': 'python',
-        'pygments_lexer': 'sql',
-        'mimetype': 'text/plain',
+        'codemirror_mode': "sql",
+        'pygments_lexer': 'postgresql',
+        'mimetype': 'text/x-hive',
         'file_extension': '.hiveql',
     }
     last_conn = None
@@ -177,6 +178,11 @@ class HiveQLKernel(Kernel):
             html = pd.read_sql(sql_req, self.last_conn).to_html()
         except OperationalError as oe:
             return self.send_error(oe)
+        except ResourceClosedError as rce:
+            if 'create' in sql_req.lower():
+                return self.send_info("Table created!")
+            else:
+                return self.send_error(oe)
         except Exception as e:
             return self.send_exception(e)
 

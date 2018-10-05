@@ -28,9 +28,6 @@ setup(
     entry_points={
         'console_scripts':
             ['jupyter-hiveql = {}.__main__:main'.format(KERNEL_NAME)],
-        # TODO
-        # 'pygments.lexers':
-        #     ['hiveql_with_magic = sparqlkernel.pygments_hiveql:HiveQLLexerMagics']
     },
     include_package_data=False,  # otherwise package_data is not used
     package_data={

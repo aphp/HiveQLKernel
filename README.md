@@ -10,7 +10,7 @@ sudo apt-get install python3-dev libsasl2-dev libsasl2-2 libsasl2-modules-gssapi
 To install the kernel:
 
 ```
-pip install .
+pip install --upgrade hiveqlKernel
 jupyter hiveql install --user
 ```
 
@@ -29,6 +29,12 @@ $$ max_overflow=10
 
 These args are passed to sqlalchemy, who registered pyHive as the 'hive' SQL back-end.
 See [github.com/dropbox/PyHive](https://github.com/dropbox/PyHive/#sqlalchemy).
+
+You can also change the default display limit (=20) like this :
+
+```
+$$ default_limit=50
+```
 
 
 You can now type HiveQL inside the next Notebook cells:
