@@ -1,6 +1,7 @@
 import json
 import logging
 import traceback
+import re
 
 from ipykernel.kernelbase import Kernel
 from sqlalchemy.exc import OperationalError, ResourceClosedError
@@ -9,6 +10,7 @@ from .constants import __version__, KERNEL_NAME
 
 from sqlalchemy import *
 import pandas as pd
+from .tool_sql import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -148,6 +150,7 @@ class HiveQLKernel(Kernel):
 
         return pyhiveconf, sql_req
 
+        
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         try:
             pyhiveconf, sql_req = self.parse_code(code)
@@ -166,23 +169,31 @@ class HiveQLKernel(Kernel):
                     'payload': [],
                     'user_expressions': {}
                 }
-
-            if self.params['default_limit'] > 0 and (sql_req.startswith('select') or sql_req.startswith('with')):
-                sql_req = "select * from ({}) hzykwyxnbv limit {}".format(sql_req, self.params['default_limit'])
+            sql_validate(sql_str)
+            sql_str = sql_rewrite(sql_str, self.params['default_limit'])
             logger.info("Running the following HiveQL query: {}".format(sql_req))
             # todo
             # if self.params['display_mode'] == 'b':
             # if self.params['display_mode'] == 'e':
             # if self.params['display_mode'] == 'be':
+            if sql_is_create(sql_req):
+                self.last_conn.execute(sql_str)
+                self.send_info("Table created!")
+                break
+            if sql_is_drop(sql_req):
+                self.last_conn.execute(sql_str)
+                self.send_info("Table dropped!")
+                break
 
-            html = pd.read_sql(sql_req, self.last_conn).to_html()
+            html = pd.read_sql(sql_str, self.last_conn).to_html()
         except OperationalError as oe:
             return self.send_error(oe)
         except ResourceClosedError as rce:
-            if 'create' in sql_req.lower():
-                return self.send_info("Table created!")
-            else:
-                return self.send_error(oe)
+                return self.send_error(rce)
+        except MultipleQueriesError as e:
+            return self.send_error("Only one query per cell!")
+        except NotAllowedQueriesError as e:
+            return self.send_error("only 'with', 'select', 'create table x.y stored as orc' and 'drop' statement are allowed")
         except Exception as e:
             return self.send_exception(e)
 
