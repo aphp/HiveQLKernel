@@ -5,3 +5,4 @@ pandas==0.23.*
 pyhive==0.6.*
 sasl==0.2.*
 thrift_sasl==0.3.*
+pytest==4.2.*

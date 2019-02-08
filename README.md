@@ -14,6 +14,11 @@ pip install --upgrade hiveqlKernel
 jupyter hiveql install --user
 ```
 
+Run tests:
+
+```
+python -m pytest
+```
 
 How to use in Notebooks:
 
