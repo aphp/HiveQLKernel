@@ -197,7 +197,7 @@ class HiveQLKernel(Kernel):
         except MultipleQueriesError as e:
             return self.send_error("Only one query per cell!")
         except NotAllowedQueriesError as e:
-            return self.send_error("only 'select', 'with', 'create table x.y stored as orc' 'drop table', 'use database', 'show databases', 'describe myTable' statements are allowed")
+            return self.send_error("only 'select', 'with', 'create table x.y stored as orc' 'drop table', 'use database', 'show databases', 'show tables', 'describe myTable' statements are allowed")
         except Exception as e:
             return self.send_exception(e)
 

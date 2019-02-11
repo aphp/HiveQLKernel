@@ -45,8 +45,11 @@ def sql_is_describe(sql_str):
     return re.search(r'^\s*describe\s+', sql_str, re.I)
 
 def sql_is_show(sql_str):
-    return re.search(r'^\s*show\s+databases', sql_str, re.I)
+    return re.search(r'^\s*show\s+', sql_str, re.I)
    
+def sql_is_use(sql_str):
+    return re.search(r'^\s*use\s+', sql_str, re.I)
+
 def sql_validate( sql_str):
     # tolerate ended with ; but not multiple queries
     if sql_str.count(";") > 0 :
@@ -54,7 +57,7 @@ def sql_validate( sql_str):
             pass
         else:
             raise MultipleQueriesError("only one is possible")
-    if sql_is_selection(sql_str) or sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str):
+    if sql_is_selection(sql_str) or sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str):
         pass
     else:
         raise NotAllowedQueriesError()
