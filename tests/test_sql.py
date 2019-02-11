@@ -10,6 +10,16 @@ def test_validate():
         assert False
     except MultipleQueriesError:
         assert True
+    SQL = "drop table toto; "
+    assert sql_validate(SQL) == None
+    SQL = "with t as (select * from tata) select * from t; "
+    assert sql_validate(SQL) == None
+    SQL = "show databases"
+    assert sql_validate(SQL) == None
+    SQL = "describe extended toto"
+    assert sql_validate(SQL) == None
+    SQL = "describe a.toto"
+    assert sql_validate(SQL) == None
 
 def test_extract_limit():
     SQL = "select * from t limit 200;"
@@ -51,6 +61,18 @@ def test_is_create():
     assert sql_is_drop(SQL)
     SQL = " drip table toto stored as orc as select * from t;"
     assert sql_is_drop(SQL) == None
+
+def test_is_show():
+    SQL = " show databases;"
+    assert sql_is_show(SQL)
+    SQL = "show my databases"
+    assert sql_is_show(SQL) == None
+
+def test_is_describe():
+    SQL = "describe  a.toto"
+    assert sql_is_describe(SQL)
+    SQL = "show my databases"
+    assert sql_is_describe(SQL) == None
 
 def test_rewrite():
     DEFAULT_LIMIT = 100
