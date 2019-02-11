@@ -179,11 +179,11 @@ class HiveQLKernel(Kernel):
             if sql_is_create(sql_req):
                 self.last_conn.execute(sql_str)
                 self.send_info("Table created!")
-                break
+                return
             if sql_is_drop(sql_req):
                 self.last_conn.execute(sql_str)
                 self.send_info("Table dropped!")
-                break
+                return
 
             html = pd.read_sql(sql_str, self.last_conn).to_html()
         except OperationalError as oe:
