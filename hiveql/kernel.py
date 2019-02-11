@@ -170,7 +170,7 @@ class HiveQLKernel(Kernel):
                     'user_expressions': {}
                 }
             sql_validate(sql_req)
-            sql_str = sql_rewrite(sql_str, self.params['default_limit'])
+            sql_str = sql_rewrite(sql_req, self.params['default_limit'])
             logger.info("Running the following HiveQL query: {}".format(sql_req))
             # todo
             # if self.params['display_mode'] == 'b':
@@ -179,13 +179,17 @@ class HiveQLKernel(Kernel):
             if sql_is_create(sql_req):
                 self.last_conn.execute(sql_str)
                 self.send_info("Table created!")
-                return
+                return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
             if sql_is_drop(sql_req):
                 self.last_conn.execute(sql_str)
                 self.send_info("Table dropped!")
-                return
+                return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
+            if sql_is_use(sql_req):
+                self.last_conn.execute(sql_str)
+                self.send_info("Database changed!")
+                return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
 
-            html = pd.read_sql(sql_str, self.last_conn).to_html()
+            html = pd.read_sql(sql_str, self.last_conn).fillna('NULL').astype(str).to_html()
         except OperationalError as oe:
             return self.send_error(oe)
         except ResourceClosedError as rce:
@@ -193,7 +197,7 @@ class HiveQLKernel(Kernel):
         except MultipleQueriesError as e:
             return self.send_error("Only one query per cell!")
         except NotAllowedQueriesError as e:
-            return self.send_error("only 'with', 'select', 'create table x.y stored as orc' and 'drop' statement are allowed")
+            return self.send_error("only 'select', 'with', 'create table x.y stored as orc' 'drop table', 'use database', 'show databases', 'describe myTable' statements are allowed")
         except Exception as e:
             return self.send_exception(e)
 
