@@ -190,12 +190,11 @@ class HiveQLKernel(Kernel):
             df = pd.read_sql(sql_str, self.last_conn)
             if sql_is_show(sql_req):
                 if sql_is_show_tables(sql_req):
-                    html = df[df.tab_name.str.contains(extract_show_pattern(sql_req))].fillna('NULL').astype(str).to_html()
+                    html = df_to_html(df[df.tab_name.str.contains( extract_show_pattern(sql_req))])
                 if sql_is_show_databases(sql_req):
-                    html = df[df.database_name.str.contains( extract_show_pattern(sql_req)].fillna('NULL').astype(str).to_html()
-            return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
+                    html = df_to_html(df[df.database_name.str.contains( extract_show_pattern(sql_req))])
             else:
-                html = df.fillna('NULL').astype(str).to_html()
+                html = df_to_html(df)
 
         except OperationalError as oe:
             return self.send_error(oe)
@@ -228,3 +227,9 @@ class HiveQLKernel(Kernel):
             'payload': [],
             'user_expressions': {}
         }
+def df_to_html(df):
+    #for column in df:
+    #    if df[column].dtype == 'object':
+    #        df[column] =  df[column].apply(lambda x: x.replace("\n","<br>"))
+    return df.fillna('NULL').astype(str).to_html(notebook=True)
+
