@@ -172,10 +172,8 @@ class HiveQLKernel(Kernel):
             sql_validate(sql_req)
             sql_str = sql_rewrite(sql_req, self.params['default_limit'])
             logger.info("Running the following HiveQL query: {}".format(sql_req))
-            # todo
-            # if self.params['display_mode'] == 'b':
-            # if self.params['display_mode'] == 'e':
-            # if self.params['display_mode'] == 'be':
+
+            pd.set_option('display.max_colwidth', -1)
             if sql_is_create(sql_req):
                 self.last_conn.execute(sql_str)
                 self.send_info("Table created!")
@@ -189,8 +187,16 @@ class HiveQLKernel(Kernel):
                 self.send_info("Database changed!")
                 return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
 
-            pd.set_option('display.max_colwidth', -1)
-            html = pd.read_sql(sql_str, self.last_conn).fillna('NULL').astype(str).to_html()
+            df = pd.read_sql(sql_str, self.last_conn)
+            if sql_is_show(sql_req):
+                if sql_is_show_tables(sql_req):
+                    html = df[df.tab_name.str.contains(extract_show_pattern(sql_req))].fillna('NULL').astype(str).to_html()
+                if sql_is_show_databases(sql_req):
+                    html = df[df.database_name.str.contains( extract_show_pattern(sql_req)].fillna('NULL').astype(str).to_html()
+            return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
+            else:
+                html = df.fillna('NULL').astype(str).to_html()
+
         except OperationalError as oe:
             return self.send_error(oe)
         except ResourceClosedError as rce:

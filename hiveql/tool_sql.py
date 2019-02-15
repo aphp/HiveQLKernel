@@ -26,11 +26,19 @@ def sql_incrust_limit( sql_str, default_limit):
 
 
 def sql_rewrite( sql_str, default_limit):
-    #sql_req = "select * from ({}) hzykwyxnbv limit {}".format(sql_req, self.params['default_limit'])
     if sql_is_selection(sql_str): #the query is a selection
         if sql_extract_limit(sql_str) > default_limit or sql_extract_limit(sql_str) ==0:# the limit is not set or to high
             return sql_incrust_limit(sql_str, default_limit) # force the default limit
+    if sql_is_show(sql_str): #the query is a show
+        pattern = re.compile("(\\w+)\\s+(\\w+)([\\s\\S])*$", re.I)# replace any existing limit with the default limit
+        res = pattern.sub("\\1 \\2", sql_str)
+        return res
     return sql_str
+
+def extract_show_pattern(sql_str):
+    pattern = re.compile("(\\w+)\\s+(\\w+)([\\s\\S]*)$", re.I)# replace any existing limit with the default limit
+    res = pattern.sub("\\3", sql_str)
+    return res.strip()
             
 def sql_is_selection(sql_str):
     return re.search(r'^\s*with|select', sql_str, re.I)
@@ -45,7 +53,13 @@ def sql_is_describe(sql_str):
     return re.search(r'^\s*describe\s+', sql_str, re.I)
 
 def sql_is_show(sql_str):
-    return re.search(r'^\s*show\s+', sql_str, re.I)
+    return sql_is_show_tables(sql_str) or sql_is_show_databases(sql_str)
+
+def sql_is_show_tables(sql_str):
+    return re.search(r'^\s*show\s+tables', sql_str, re.I)
+
+def sql_is_show_databases(sql_str):
+    return re.search(r'^\s*show\s+databases', sql_str, re.I)
    
 def sql_is_use(sql_str):
     return re.search(r'^\s*use\s+', sql_str, re.I)
@@ -61,3 +75,4 @@ def sql_validate( sql_str):
         pass
     else:
         raise NotAllowedQueriesError()
+
