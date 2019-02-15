@@ -189,6 +189,7 @@ class HiveQLKernel(Kernel):
                 self.send_info("Database changed!")
                 return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
 
+            pd.set_option('display.max_colwidth', -1)
             html = pd.read_sql(sql_str, self.last_conn).fillna('NULL').astype(str).to_html()
         except OperationalError as oe:
             return self.send_error(oe)
