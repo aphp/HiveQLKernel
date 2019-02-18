@@ -65,8 +65,8 @@ def test_is_create():
 def test_is_show():
     SQL = " show databases;"
     assert sql_is_show(SQL)
-    SQL = "show my databases"
-    assert sql_is_show(SQL) == None
+    SQL = "show databases toto"
+    assert sql_is_show(SQL)
 
 def test_is_describe():
     SQL = "describe  a.toto"
@@ -78,3 +78,15 @@ def test_rewrite():
     DEFAULT_LIMIT = 100
     SQL = "select * from t limit 200;"
     assert sql_rewrite(SQL, DEFAULT_LIMIT) == "select * from t  limit 100"
+    SQL = "show databases cse"
+    assert sql_rewrite(SQL, DEFAULT_LIMIT) == "show databases"
+    SQL = "show tables cse"
+    assert sql_rewrite(SQL, DEFAULT_LIMIT) == "show tables"
+    SQL = "select count(1)  from t"
+    assert sql_rewrite(SQL, DEFAULT_LIMIT) == "select count(1)  from t"
+    SQL = "select count(*)  from t"
+    assert sql_rewrite(SQL, DEFAULT_LIMIT) == "select count(*)  from t"
+
+def test_rewrite2():
+    SQL = "show tables cse"
+    assert extract_show_pattern(SQL) == "cse"
