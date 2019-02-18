@@ -26,6 +26,8 @@ def sql_incrust_limit( sql_str, default_limit):
 
 
 def sql_rewrite( sql_str, default_limit):
+    if sql_is_count(sql_str):# no limit for count
+        return sql_str
     if sql_is_selection(sql_str): #the query is a selection
         if sql_extract_limit(sql_str) > default_limit or sql_extract_limit(sql_str) ==0:# the limit is not set or to high
             return sql_incrust_limit(sql_str, default_limit) # force the default limit
@@ -42,6 +44,9 @@ def extract_show_pattern(sql_str):
             
 def sql_is_selection(sql_str):
     return re.search(r'^\s*with|select', sql_str, re.I)
+
+def sql_is_count(sql_str):
+    return re.search(r'^\s*select\s+count\(.\)\s+from', sql_str, re.I)
 
 def sql_is_create(sql_str):
     return re.search(r'^\s*create\s+table\s+.*stored\s+as\s+orc\s+as', sql_str, re.I)
