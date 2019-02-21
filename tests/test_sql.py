@@ -103,7 +103,7 @@ def test_explain():
     SQL = "explain select * from toto"
     assert sql_is_explain(SQL) 
 
-def test_explain():
+def test_ctas():
     SQL = "create table toto stored as orc as select * from tata"
     assert sql_rewrite(SQL, 100)  == SQL
 
