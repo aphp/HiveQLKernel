@@ -20,6 +20,10 @@ def test_validate():
     assert sql_validate(SQL) == None
     SQL = "describe a.toto"
     assert sql_validate(SQL) == None
+    SQL = "show databases mydatabase"
+    assert sql_validate(SQL) == None
+    SQL = "SET hive.enforce.sorting = true"
+    assert sql_validate(SQL) == None
 
 def test_extract_limit():
     SQL = "select * from t limit 200;"
