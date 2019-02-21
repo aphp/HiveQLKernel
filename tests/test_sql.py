@@ -1,5 +1,5 @@
 from hiveql.tool_sql import *
-
+import logging 
 
 def test_validate():
     SQL = "select * from toto; "
@@ -53,6 +53,10 @@ def test_is_selection():
     assert sql_is_selection(SQL)
     SQL = "create * from t limit 200;"
     assert sql_is_selection(SQL) == None
+    SQL = "--hello world\n--second\nselect * from toto; "
+    assert sql_is_selection(SQL)
+    SQL = "--hello world\n--second\nselect * from toto; "
+    assert sql_validate(SQL) == None
 
 def test_is_create():
     SQL = "create table toto stored as orc as select * from t;"
@@ -94,3 +98,8 @@ def test_rewrite():
 def test_rewrite2():
     SQL = "show tables cse"
     assert extract_show_pattern(SQL) == "cse"
+
+def test_remove_comment():
+    SQL = "--hello world\n--second\nselect * from toto; "
+    assert sql_remove_comment(SQL) == "select * from toto; "
+
