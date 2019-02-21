@@ -103,6 +103,10 @@ def test_explain():
     SQL = "explain select * from toto"
     assert sql_is_explain(SQL) 
 
+def test_explain():
+    SQL = "create table toto stored as orc as select * from tata"
+    assert sql_rewrite(SQL, 100)  == SQL
+
 def test_remove_comment():
     SQL = "--hello world\n--second\nselect * from toto; "
     assert sql_remove_comment(SQL) == "select * from toto; "
