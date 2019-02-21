@@ -99,6 +99,10 @@ def test_rewrite2():
     SQL = "show tables cse"
     assert extract_show_pattern(SQL) == "cse"
 
+def test_explain():
+    SQL = "explain select * from toto"
+    assert sql_is_explain(SQL) 
+
 def test_remove_comment():
     SQL = "--hello world\n--second\nselect * from toto; "
     assert sql_remove_comment(SQL) == "select * from toto; "

@@ -87,6 +87,10 @@ def sql_is_set(sql_str):
     sql_str = sql_remove_comment(sql_str)
     return re.search(r'^\s*set\s+', sql_str, re.I)
 
+def sql_is_explain(sql_str):
+    sql_str = sql_remove_comment(sql_str)
+    return re.search(r'^\s*explain\s+', sql_str, re.I)
+
 def sql_remove_comment(sql_str):
     res = re.sub("--.*\n","", sql_str, re.MULTILINE)
     return res
