@@ -169,6 +169,7 @@ class HiveQLKernel(Kernel):
                     'payload': [],
                     'user_expressions': {}
                 }
+            sql_req = sql_remove_comment(sql_req)
             sql_validate(sql_req)
             sql_str = sql_rewrite(sql_req, self.params['default_limit'])
             logger.info("Running the following HiveQL query: {}".format(sql_req))

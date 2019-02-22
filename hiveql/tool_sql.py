@@ -104,7 +104,7 @@ def sql_validate(sql_str):
             pass
         else:
             raise MultipleQueriesError("only one query per cell")
-    if  sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str) or sql_is_set(sql_str) or sql_is_selection(sql_str):
+    if  sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str) or sql_is_set(sql_str) or sql_is_selection(sql_str) or sql_is_explain(sql_str):
         pass
     else:
         raise NotAllowedQueriesError()
