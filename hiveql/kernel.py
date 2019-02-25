@@ -137,7 +137,8 @@ class HiveQLKernel(Kernel):
                     raise KernelSyntaxError("Headers starting with %% must be at the beginning of your request.")
             else:
                 beginning = False
-                sql_req += ' ' + l
+                if not l.startswith("--"):
+                    sql_req += ' ' + l
 
         sql_req = sql_req.strip()
         if sql_req.endswith(';'):
