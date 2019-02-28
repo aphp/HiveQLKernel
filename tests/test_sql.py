@@ -111,3 +111,8 @@ def test_remove_comment():
     SQL = "--hello world\n--second\nselect * from toto; "
     assert sql_remove_comment(SQL) == "select * from toto; "
 
+def test_add():
+    SQL = "add jar;"
+    assert sql_is_add(SQL)
+    SQL = "ADD jar "
+    assert sql_is_add(SQL)

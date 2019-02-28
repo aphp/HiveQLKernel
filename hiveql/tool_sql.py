@@ -91,6 +91,10 @@ def sql_is_explain(sql_str):
     sql_str = sql_remove_comment(sql_str)
     return re.search(r'^\s*explain\s+', sql_str, re.I)
 
+def sql_is_add(sql_str):
+    sql_str = sql_remove_comment(sql_str)
+    return re.search(r'^\s*add\s+', sql_str, re.I)
+
 def sql_remove_comment(sql_str):
     res = re.sub("--.*\n","", sql_str, re.MULTILINE)
     return res
@@ -104,7 +108,7 @@ def sql_validate(sql_str):
             pass
         else:
             raise MultipleQueriesError("only one query per cell")
-    if  sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str) or sql_is_set(sql_str) or sql_is_selection(sql_str) or sql_is_explain(sql_str):
+    if  sql_is_add(sql_str) or sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str) or sql_is_set(sql_str) or sql_is_selection(sql_str) or sql_is_explain(sql_str):
         pass
     else:
         raise NotAllowedQueriesError()
