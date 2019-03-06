@@ -159,7 +159,6 @@ class HiveQLKernel(Kernel):
 
         return pyhiveconf, sql_req
 
-
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         try:
             pyhiveconf, sql_req = self.parse_code(code)
