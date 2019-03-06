@@ -2,11 +2,12 @@ import json
 import logging
 import traceback
 import re
+import os.path
 
 from ipykernel.kernelbase import Kernel
 from sqlalchemy.exc import OperationalError, ResourceClosedError
 
-from .constants import __version__, KERNEL_NAME
+from .constants import __version__, KERNEL_NAME, CONFIG_FILE
 
 from sqlalchemy import *
 import pandas as pd
@@ -65,7 +66,11 @@ class HiveQLKernel(Kernel):
         "default_limit": 20,
         "display_mode": "be"
     }
-
+    conf = None
+    conf_file = os.path.expanduser(CONFIG_FILE)
+    if os.path.isfile(conf_file):
+        with open(conf_file, mode='r') as file_hanlde:
+            conf = json.load(file_hanlde)
 
     def send_exception(self, e):
         if type(e) in [ConnectionNotCreated]:
@@ -103,7 +108,7 @@ class HiveQLKernel(Kernel):
         if 'default_limit' in params:
             try:
                 self.params['default_limit'] = int(params['default_limit'])
-                self.send_info("Set display limit to {}".format(self.params['default_limit']))
+                self.send_info("Set display limit to {}\n".format(self.params['default_limit']))
             except ValueError as e:
                 self.send_exception(e)
         if 'display_mode' in params:
@@ -140,6 +145,9 @@ class HiveQLKernel(Kernel):
                 if not l.startswith("--"):
                     sql_req += ' ' + l
 
+        if self.last_conn is None and not headers and self.conf is not None:
+            headers = self.conf  # if cells doesn't contain $$ and connection is None, overriding headers with conf data
+
         sql_req = sql_req.strip()
         if sql_req.endswith(';'):
             sql_req = sql_req[:-1]
@@ -151,7 +159,6 @@ class HiveQLKernel(Kernel):
 
         return pyhiveconf, sql_req
 
-        
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         try:
             pyhiveconf, sql_req = self.parse_code(code)
