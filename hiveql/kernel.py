@@ -195,6 +195,11 @@ class HiveQLKernel(Kernel):
                 self.last_conn.execute(sql_str)
                 self.send_info("Database changed!")
                 return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
+            if sql_is_set_variable(sql_req):
+                for s in sql_req.split(";"):
+                    self.last_conn.execute(s.strip())
+                self.send_info("variables set!")
+                return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {}}
 
             df = pd.read_sql(sql_str, self.last_conn)
             if sql_is_show(sql_req):

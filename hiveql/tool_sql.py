@@ -83,9 +83,13 @@ def sql_is_use(sql_str):
     sql_str = sql_remove_comment(sql_str)
     return re.search(r'^\s*use\s+', sql_str, re.I)
 
+def sql_is_set_variable(sql_str):
+    sql_str = sql_remove_comment(sql_str)
+    return re.search(r'^\s*set\s+\w+.*=\w+', sql_str, re.I)
+
 def sql_is_set(sql_str):
     sql_str = sql_remove_comment(sql_str)
-    return re.search(r'^\s*set\s+', sql_str, re.I)
+    return re.search(r'^\s*set\s*$', sql_str, re.I) or re.search(r'^\s*set\s+\w+.*$', sql_str, re.I)
 
 def sql_is_explain(sql_str):
     sql_str = sql_remove_comment(sql_str)
@@ -103,12 +107,14 @@ def sql_remove_comment(sql_str):
 def sql_validate(sql_str):
     # tolerate ended with ; but not multiple queries
     sql_str = sql_remove_comment(sql_str)
-    if sql_str.count(";") > 0 :
-        if re.search(r";\s*$", sql_str) and sql_str.count(";") == 1:
-            pass
-        else:
-            raise MultipleQueriesError("only one query per cell")
-    if  sql_is_add(sql_str) or sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str) or sql_is_set(sql_str) or sql_is_selection(sql_str) or sql_is_explain(sql_str):
+    if sql_str.count(";") > 0:
+        for sql in sql_str.split(";"):
+            if not sql_is_set_variable(sql.strip()):
+                raise MultipleQueriesError("only one query per cell")
+            else:
+                pass
+
+    if sql_is_set(sql_str) or sql_is_add(sql_str) or sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str) or sql_is_set_variable(sql_str) or sql_is_selection(sql_str) or sql_is_explain(sql_str):
         pass
     else:
         raise NotAllowedQueriesError()
