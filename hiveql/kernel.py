@@ -177,43 +177,48 @@ class HiveQLKernel(Kernel):
                     'payload': [],
                     'user_expressions': {}
                 }
-            sql_req = sql_remove_comment(sql_req)
-            sql_validate(sql_req)
-            sql_str = sql_rewrite(sql_req, self.params['default_limit'])
-            logger.info("Running the following HiveQL query: {}".format(sql_req))
-
             pd.set_option('display.max_colwidth', -1)
-            if sql_is_create(sql_req):
-                self.last_conn.execute(sql_str)
-                self.send_info("Table created!")
-                return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
-            if sql_is_drop(sql_req):
-                self.last_conn.execute(sql_str)
-                self.send_info("Table dropped!")
-                return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
-            if sql_is_use(sql_req):
-                self.last_conn.execute(sql_str)
-                self.send_info("Database changed!")
-                return { 'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {} }
-            if sql_is_set_variable(sql_req):
-                for s in sql_req.split(";"):
-                    self.last_conn.execute(s.strip())
-                self.send_info("variables set!")
-                return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {}}
+            sql_req = sql_remove_comment(sql_req)
 
-            df = pd.read_sql(sql_str, self.last_conn)
-            if sql_is_show(sql_req):
-                if sql_is_show_tables(sql_req):
-                    html = df_to_html(df[df.tab_name.str.contains( extract_show_pattern(sql_req))])
-                if sql_is_show_databases(sql_req):
-                    html = df_to_html(df[df.database_name.str.contains( extract_show_pattern(sql_req))])
-            else:
-                html = df_to_html(df)
-
+            for query in sql_req.split(";"):
+                query = sql_rewrite(query, self.params['default_limit'])
+                logger.info("Running the following HiveQL query: {}".format(query))
+                result = self.last_conn.execute(query.strip())
+                if result is not None and result.returns_rows is True:
+                    df = pd.DataFrame(result.fetchall(), columns=result.keys())
+                    html = df_to_html(df)
+                    self.send_response(self.iopub_socket, 'display_data', {
+                        'data': {
+                            "text/html": html,
+                        },
+                        "metadata": {
+                            "image/png": {
+                                "width": 640,
+                                "height": 480,
+                            },
+                        }
+                    })
+                else:
+                    if sql_is_use(query):
+                        self.send_info("Database changed successfully !\n")
+                    elif sql_is_create(query):
+                        self.send_info("Table created successfully !\n")
+                    elif sql_is_drop(query):
+                        self.send_info("Table dropped successfully !\n")
+                    elif sql_is_set_variable(query):
+                        self.send_info("Variable set successfully !\n")
+                    else:
+                        self.send_info("Query executed successfully !\n")
+            return {
+                'status': 'ok',
+                'execution_count': self.execution_count,
+                'payload': [],
+                'user_expressions': {}
+            }
         except OperationalError as oe:
-            return self.send_error(oe)
+            return self.send_error(refactor(oe))
         except ResourceClosedError as rce:
-                return self.send_error(rce)
+            return self.send_error(rce)
         except MultipleQueriesError as e:
             return self.send_error("Only one query per cell!")
         except NotAllowedQueriesError as e:
@@ -221,29 +226,16 @@ class HiveQLKernel(Kernel):
         except Exception as e:
             return self.send_exception(e)
 
-        # msg_types = https://jupyter-client.readthedocs.io/en/latest/messaging.html?highlight=stream#messages-on-the-iopub-pub-sub-channel
-        self.send_response(self.iopub_socket, 'execute_result', {
-            "execution_count": self.execution_count,
-            'data': {
-                "text/html": html,
-            },
-            "metadata": {
-                "image/png": {
-                    "width": 640,
-                    "height": 480,
-                },
-            }
-        })
 
-        return {
-            'status': 'ok',
-            'execution_count': self.execution_count,
-            'payload': [],
-            'user_expressions': {}
-        }
 def df_to_html(df):
     #for column in df:
     #    if df[column].dtype == 'object':
     #        df[column] =  df[column].apply(lambda x: x.replace("\n","<br>"))
     return df.fillna('NULL').astype(str).to_html(notebook=True)
 
+
+def refactor(oe):
+    error_string = "error_code: {}\nsql_state: {}\nerror_message: {}".format(oe.orig.args[0].status.errorCode,
+                                                                             oe.orig.args[0].status.sqlState,
+                                                                             oe.orig.args[0].status.errorMessage)
+    return error_string
