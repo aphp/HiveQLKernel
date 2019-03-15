@@ -61,7 +61,13 @@ You also have other options, like changing the default display limit (=20) like 
 $$ default_limit=50
 ```
 
-Have fun!
+Some hive functions are extended. They allow to filter with some patterns.
+
+```
+SHOW TABLES <pattern>
+SHOW DATABASES <pattern>
+```
+
 
 ### Run tests
 
@@ -70,3 +76,4 @@ python -m pytest
 ```
 
 
+Have fun!
