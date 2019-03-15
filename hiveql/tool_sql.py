@@ -103,17 +103,15 @@ def sql_remove_comment(sql_str):
     res = re.sub("--.*\n","", sql_str, re.MULTILINE)
     return res
 
+def sql_explode(sql_str):
+    tmp = []
+    sql_str = sql_remove_comment(sql_str)
+    for sql in sql_str.split(";"):
+        if sql.strip() != "":
+            tmp.append(sql.strip())
+    return tmp
 
 def sql_validate(sql_str):
-    # tolerate ended with ; but not multiple queries
-    sql_str = sql_remove_comment(sql_str)
-    if sql_str.count(";") > 0:
-        for sql in sql_str.split(";"):
-            if not sql_is_set_variable(sql.strip()):
-                raise MultipleQueriesError("only one query per cell")
-            else:
-                pass
-
     if sql_is_set(sql_str) or sql_is_add(sql_str) or sql_is_drop(sql_str) or sql_is_create(sql_str) or sql_is_describe(sql_str) or sql_is_show(sql_str) or sql_is_use(sql_str) or sql_is_set_variable(sql_str) or sql_is_selection(sql_str) or sql_is_explain(sql_str):
         pass
     else:

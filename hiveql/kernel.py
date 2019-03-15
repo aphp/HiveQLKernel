@@ -180,12 +180,17 @@ class HiveQLKernel(Kernel):
             pd.set_option('display.max_colwidth', -1)
             sql_req = sql_remove_comment(sql_req)
 
-            for query in sql_req.split(";"):
+            for query in sql_explode(sql_req):
                 query = sql_rewrite(query, self.params['default_limit'])
                 logger.info("Running the following HiveQL query: {}".format(query))
                 result = self.last_conn.execute(query.strip())
                 if result is not None and result.returns_rows is True:
                     df = pd.DataFrame(result.fetchall(), columns=result.keys())
+                    if sql_is_show(query): # allow limiting show tables/databases with a pattern
+                        if sql_is_show_tables(query):
+                            df = df[df.tab_name.str.contains(extract_show_pattern(query))]
+                        if sql_is_show_databases(query):
+                            df = df[df.database_name.str.contains(extract_show_pattern(query))]
                     html = df_to_html(df)
                     self.send_response(self.iopub_socket, 'display_data', {
                         'data': {
@@ -219,8 +224,6 @@ class HiveQLKernel(Kernel):
             return self.send_error(refactor(oe))
         except ResourceClosedError as rce:
             return self.send_error(rce)
-        except MultipleQueriesError as e:
-            return self.send_error("Only one query per cell!")
         except NotAllowedQueriesError as e:
             return self.send_error("only 'select', 'with', 'set property=value', 'create table x.y stored as orc' 'drop table', 'use database', 'show databases', 'show tables', 'describe myTable' statements are allowed")
         except Exception as e:

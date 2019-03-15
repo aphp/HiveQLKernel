@@ -4,12 +4,6 @@ import logging
 def test_validate():
     SQL = "select * from toto; "
     assert sql_validate(SQL) == None
-    BAD_SQL = "select * from toto; select * from tata;"
-    try:
-        sql_validate(BAD_SQL)
-        assert False
-    except MultipleQueriesError:
-        assert True
     SQL = "drop table toto; "
     assert sql_validate(SQL) == None
     SQL = "with t as (select * from tata) select * from t; "
@@ -23,6 +17,8 @@ def test_validate():
     SQL = "show databases mydatabase"
     assert sql_validate(SQL) == None
     SQL = "SET hive.enforce.sorting = true"
+    assert sql_validate(SQL) == None
+    SQL = "SET hive.enforce.sorting = true;select * from t"
     assert sql_validate(SQL) == None
 
 def test_extract_limit():
@@ -113,6 +109,14 @@ def test_remove_comment():
 
 def test_add():
     SQL = "add jar;"
-    assert sql_is_add(SQL)
+    assert sql_is_add(SQL) != None
     SQL = "ADD jar "
     assert sql_is_add(SQL)
+
+
+def test_explode_sql():
+    SQL = "select * from t; "
+    assert sql_explode(SQL) == ["select * from t"]
+    SQL = "select * from t; use db"
+    assert sql_explode(SQL) == ["select * from t","use db"]
+
