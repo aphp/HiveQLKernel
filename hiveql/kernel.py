@@ -13,6 +13,8 @@ from sqlalchemy import *
 import pandas as pd
 from .tool_sql import *
 
+import time
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -158,6 +160,11 @@ class HiveQLKernel(Kernel):
 
         return pyhiveconf, sql_req
 
+    def format_time(self, start, end):
+        hours, rem = divmod(end-start, 3600)
+        minutes, seconds = divmod(rem, 60)
+        return "{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds)
+
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         try:
             pyhiveconf, sql_req = self.parse_code(code)
@@ -184,7 +191,10 @@ class HiveQLKernel(Kernel):
                 logger.info("Running the following HiveQL query: {}".format(query))
                 result = self.last_conn.execute(query.strip())
                 if result is not None and result.returns_rows is True:
+                    start = time.time()
                     df = pd.DataFrame(result.fetchall(), columns=result.keys())
+                    end = time.time()
+                    elapsed_time = self.format_time(start, end)
                     if sql_is_show(query) or sql_is_describe(query): # allow limiting show tables/databases and describe table with a pattern
                         if sql_is_describe(query):
                             df = df[df.col_name.str.contains(extract_pattern(query))]
@@ -193,6 +203,7 @@ class HiveQLKernel(Kernel):
                         if sql_is_show_databases(query):
                             df = df[df.database_name.str.contains(extract_pattern(query))]
                     html = df_to_html(df)
+                    self.send_info("Elapsed Time: {elapsed_time} !\n")
                     self.send_response(self.iopub_socket, 'display_data', {
                         'data': {
                             "text/html": html,
@@ -206,15 +217,15 @@ class HiveQLKernel(Kernel):
                     })
                 else:
                     if sql_is_use(query):
-                        self.send_info("Database changed successfully !\n")
+                        self.send_info("Database changed successfully in {elapsed_time} !\n")
                     elif sql_is_create(query):
-                        self.send_info("Table created successfully !\n")
+                        self.send_info("Table created successfully in {elapsed_time} !\n")
                     elif sql_is_drop(query):
-                        self.send_info("Table dropped successfully !\n")
+                        self.send_info("Table dropped successfully in {elapsed_time} !\n")
                     elif sql_is_set_variable(query):
-                        self.send_info("Variable set successfully !\n")
+                        self.send_info("Variable set successfully in {elapsed_time} !\n")
                     else:
-                        self.send_info("Query executed successfully !\n")
+                        self.send_info("Query executed successfully in {elapsed_time} !\n")
             return {
                 'status': 'ok',
                 'execution_count': self.execution_count,
