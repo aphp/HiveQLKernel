@@ -38,7 +38,7 @@ def sql_rewrite( sql_str, default_limit):
         return res
     return sql_str
 
-def extract_show_pattern(sql_str):
+def extract_pattern(sql_str):
     pattern = re.compile("(\\w+)\\s+(\\w+)([\\s\\S]*)$", re.I)# replace any existing limit with the default limit
     res = pattern.sub("\\3", sql_str)
     return res.strip()

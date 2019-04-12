@@ -100,7 +100,7 @@ class HiveQLKernel(Kernel):
     def create_conn(self, url, **kwargs):
         self.send_info("create_engine('" + url + "', " + ', '.join(
             [str(k) + '=' + (str(v) if type(v) == str else json.dumps(v)) for k, v in kwargs.items()]) + ")\n")
-        self.last_conn = create_engine(url, **kwargs)
+        self.last_conn = create_engine(url,**kwargs)
         self.last_conn.connect()
         self.send_info("Connection established to database!\n")
 
@@ -185,11 +185,13 @@ class HiveQLKernel(Kernel):
                 result = self.last_conn.execute(query.strip())
                 if result is not None and result.returns_rows is True:
                     df = pd.DataFrame(result.fetchall(), columns=result.keys())
-                    if sql_is_show(query): # allow limiting show tables/databases with a pattern
+                    if sql_is_show(query) or sql_is_describe(query): # allow limiting show tables/databases and describe table with a pattern
+                        if sql_is_describe(query):
+                            df = df[df.col_name.str.contains(extract_pattern(query))]
                         if sql_is_show_tables(query):
-                            df = df[df.tab_name.str.contains(extract_show_pattern(query))]
+                            df = df[df.tab_name.str.contains(extract_pattern(query))]
                         if sql_is_show_databases(query):
-                            df = df[df.database_name.str.contains(extract_show_pattern(query))]
+                            df = df[df.database_name.str.contains(extract_pattern(query))]
                     html = df_to_html(df)
                     self.send_response(self.iopub_socket, 'display_data', {
                         'data': {
