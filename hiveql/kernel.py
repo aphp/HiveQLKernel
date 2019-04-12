@@ -142,8 +142,7 @@ class HiveQLKernel(Kernel):
                     raise KernelSyntaxError("Headers starting with %% must be at the beginning of your request.")
             else:
                 beginning = False
-                if not l.startswith("--"):
-                    sql_req += ' ' + l
+                sql_req += '\n' + l
 
         if self.last_conn is None and not headers and self.conf is not None:
             headers = self.conf  # if cells doesn't contain $$ and connection is None, overriding headers with conf data
