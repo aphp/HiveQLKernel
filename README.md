@@ -32,7 +32,7 @@ Inside a Notebook cell, copy&paste this, change the configuration to match your 
 
 ```
 $$ url=hive://<kerberos-username>@<hive-host>:<hive-port>/<db-name>
-$$ connect_args={"auth": "KERBEROS","kerberos_service_name": "hive"}
+$$ connect_args={"auth": "KERBEROS", "kerberos_service_name": "hive", "configuration": {"tez.queue.name": "myqueue"}}
 $$ pool_size=5
 $$ max_overflow=10
 ```
@@ -47,7 +47,7 @@ The HiveQL kernel is looking for the configuration file at `~/.hiveql_kernel.con
 The contents must be like this (in json format):
 
 ```
-{ "url": "hive://<kerberos-username>@<hive-host>:<hive-port>/<db-name>", "connect_args" : { "auth": "KERBEROS", "kerberos_service_name":"hive" }, "pool_size": 5, "max_overflow": 10, "default_limit": 20, "display_mode": "be" }
+{ "url": "hive://<kerberos-username>@<hive-host>:<hive-port>/<db-name>", "connect_args" : { "auth": "KERBEROS", "kerberos_service_name":"hive", "configuration": {"tez.queue.name": "myqueue"}}, "pool_size": 5, "max_overflow": 10, "default_limit": 20, "display_mode": "be" }
 ```
 
 
