@@ -186,8 +186,8 @@ class HiveQLKernel(Kernel):
             pd.set_option('display.max_colwidth', -1)
             sql_req = sql_remove_comment(sql_req)
 
-            for query in sql_explode(sql_req):
-                query = sql_rewrite(query, self.params['default_limit'])
+            for query_raw in sql_explode(sql_req):
+                query = sql_rewrite(query_raw, self.params['default_limit'])
                 logger.info("Running the following HiveQL query: {}".format(query))
                 result = self.last_conn.execute(query.strip())
                 if result is not None and result.returns_rows is True:
@@ -196,14 +196,15 @@ class HiveQLKernel(Kernel):
                     end = time.time()
                     elapsed_time = self.format_time(start, end)
                     if sql_is_show(query) or sql_is_describe(query): # allow limiting show tables/databases and describe table with a pattern
+                        pattern = extract_pattern(query_raw)
                         if sql_is_describe(query):
-                            df = df[df.col_name.str.contains(extract_pattern(query))]
+                            df = df[df.col_name.str.contains(pattern)]
                         if sql_is_show_tables(query):
-                            df = df[df.tab_name.str.contains(extract_pattern(query))]
+                            df = df[df.tab_name.str.contains(pattern)]
                         if sql_is_show_databases(query):
-                            df = df[df.database_name.str.contains(extract_pattern(query))]
+                            df = df[df.database_name.str.contains(pattern)]
                     html = df_to_html(df)
-                    self.send_info("Elapsed Time: {elapsed_time} !\n")
+                    self.send_info("Elapsed Time: {} !\n".format(elapsed_time))
                     self.send_response(self.iopub_socket, 'display_data', {
                         'data': {
                             "text/html": html,
@@ -217,15 +218,15 @@ class HiveQLKernel(Kernel):
                     })
                 else:
                     if sql_is_use(query):
-                        self.send_info("Database changed successfully in {elapsed_time} !\n")
+                        self.send_info("Database changed successfully in {} !\n".format(elapsed_time))
                     elif sql_is_create(query):
-                        self.send_info("Table created successfully in {elapsed_time} !\n")
+                        self.send_info("Table created successfully in {} !\n".format(elapsed_time))
                     elif sql_is_drop(query):
-                        self.send_info("Table dropped successfully in {elapsed_time} !\n")
+                        self.send_info("Table dropped successfully in {} !\n".format(elapsed_time))
                     elif sql_is_set_variable(query):
-                        self.send_info("Variable set successfully in {elapsed_time} !\n")
+                        self.send_info("Variable set successfully in {} !\n".format(elapsed_time))
                     else:
-                        self.send_info("Query executed successfully in {elapsed_time} !\n")
+                        self.send_info("Query executed successfully in {} !\n".format(elapsed_time))
             return {
                 'status': 'ok',
                 'execution_count': self.execution_count,

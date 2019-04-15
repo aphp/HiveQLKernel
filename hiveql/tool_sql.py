@@ -32,14 +32,15 @@ def sql_rewrite( sql_str, default_limit):
     if sql_is_selection(sql_str): #the query is a selection
         if sql_extract_limit(sql_str) > default_limit or sql_extract_limit(sql_str) ==0:# the limit is not set or to high
             return sql_incrust_limit(sql_str, default_limit) # force the default limit
-    if sql_is_show(sql_str): #the query is a show
+    if sql_is_show(sql_str) or sql_is_describe(sql_str): #the query is a show
         pattern = re.compile("(\\w+)\\s+(\\w+)([\\s\\S]*)$", re.I)# replace any existing limit with the default limit
         res = pattern.sub("\\1 \\2", sql_str)
         return res
     return sql_str
 
 def extract_pattern(sql_str):
-    pattern = re.compile("(\\w+)\\s+(\\w+)([\\s\\S]*)$", re.I)# replace any existing limit with the default limit
+    sql_str = sql_remove_comment(sql_str)
+    pattern = re.compile("(\\w+)\\s+(\\w+)([\\s\\S]*)$", re.I)
     res = pattern.sub("\\3", sql_str)
     return res.strip()
             
