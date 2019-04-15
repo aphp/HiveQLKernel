@@ -189,12 +189,12 @@ class HiveQLKernel(Kernel):
             for query_raw in sql_explode(sql_req):
                 query = sql_rewrite(query_raw, self.params['default_limit'])
                 logger.info("Running the following HiveQL query: {}".format(query))
+                start = time.time()
                 result = self.last_conn.execute(query.strip())
+                end = time.time()
+                elapsed_time = self.format_time(start, end)
                 if result is not None and result.returns_rows is True:
-                    start = time.time()
                     df = pd.DataFrame(result.fetchall(), columns=result.keys())
-                    end = time.time()
-                    elapsed_time = self.format_time(start, end)
                     if sql_is_show(query) or sql_is_describe(query): # allow limiting show tables/databases and describe table with a pattern
                         pattern = extract_pattern(query_raw)
                         if sql_is_describe(query):
