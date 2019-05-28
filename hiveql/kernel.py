@@ -151,7 +151,7 @@ class HiveQLKernel(Kernel):
 
         sql_req = sql_req.strip()
         if sql_req.endswith(';'):
-            sql_req = sql_req[:-1]
+            sql_req = sql_req[:-1] + "\n" # the last newline let add the limit without being commented by a last comment
 
         a = ['default_limit', 'display_mode']
         params, pyhiveconf = {k: v for k, v in headers.items() if k in a}, {k: v for k, v in headers.items() if k not in a}

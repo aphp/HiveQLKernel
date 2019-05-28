@@ -91,9 +91,6 @@ def test_rewrite():
     SQL = "select count(*)  from t"
     assert sql_rewrite(SQL, DEFAULT_LIMIT) == "select count(*)  from t"
 
-def test_rewrite2():
-    SQL = "show tables cse"
-    assert extract_show_pattern(SQL) == "cse"
 
 def test_explain():
     SQL = "explain select * from toto"
