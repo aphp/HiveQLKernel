@@ -194,7 +194,7 @@ class HiveQLKernel(Kernel):
                 end = time.time()
                 elapsed_time = self.format_time(start, end)
                 if result is not None and result.returns_rows is True:
-                    df = pd.DataFrame(result.fetchall(), columns=result.keys())
+                    df = pd.DataFrame(result.fetchall(), columns=result.keys(), dtype="object")
                     if sql_is_show(query) or sql_is_describe(query): # allow limiting show tables/databases and describe table with a pattern
                         pattern = extract_pattern(query_raw)
                         if sql_is_describe(query):
