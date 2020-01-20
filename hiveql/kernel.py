@@ -260,7 +260,8 @@ def df_to_html(df):
 
 
 def refactor(oe):
-    error_string = "error_code: {}\nsql_state: {}\nerror_message: {}".format(oe.orig.args[0].status.errorCode,
+    error_string = "error_code: {}\nsql_state: {}\nerror_message: {} full_message {}".format(oe.orig.args[0].status.errorCode,
                                                                              oe.orig.args[0].status.sqlState,
-                                                                             oe.orig.args[0].status.errorMessage)
+                                                                             oe.orig.args[0].status.errorMessage,
+                                                                             str(oe.orig.args[0].status))
     return error_string
