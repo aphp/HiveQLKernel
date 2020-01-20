@@ -198,11 +198,20 @@ class HiveQLKernel(Kernel):
                     if sql_is_show(query) or sql_is_describe(query): # allow limiting show tables/databases and describe table with a pattern
                         pattern = extract_pattern(query_raw)
                         if sql_is_describe(query):
+                            # hive has "col_name" spark has "col_name"
                             df = df[df.col_name.str.contains(pattern)]
                         if sql_is_show_tables(query):
-                            df = df[df.tab_name.str.contains(pattern)]
+                            # hive has "tab_name" spark has "tableName"
+                            if "tab_name" in df.columns:
+                                df = df[df.tab_name.str.contains(pattern)]
+                            else:
+                                df = df[df.tableName.str.contains(pattern)]
                         if sql_is_show_databases(query):
-                            df = df[df.database_name.str.contains(pattern)]
+                            # hive has "database_name" spark has "databaseName"
+                            if "database_name" in df.columns:
+                                df = df[df.database_name.str.contains(pattern)]
+                            else:
+                                df = df[df.databaseName.str.contains(pattern)]
                     html = df_to_html(df)
                     self.send_info("Elapsed Time: {} !\n".format(elapsed_time))
                     self.send_response(self.iopub_socket, 'display_data', {
