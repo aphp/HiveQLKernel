@@ -12,6 +12,8 @@ from .constants import __version__, KERNEL_NAME, CONFIG_FILE
 from sqlalchemy import *
 import pandas as pd
 from .tool_sql import *
+from sqlalchemy import event
+
 
 import time
 
@@ -79,7 +81,7 @@ class HiveQLKernel(Kernel):
             tb = ""
         else:
             tb = "\n" + traceback.format_exc()
-        return self.send_error(str(e) + tb)
+        return self.send_error(tb)
 
     def send_error(self, contents):
         self.send_response(self.iopub_socket, 'stream', {
@@ -191,6 +193,9 @@ class HiveQLKernel(Kernel):
                 logger.info("Running the following HiveQL query: {}".format(query))
                 start = time.time()
                 result = self.last_conn.execute(query.strip())
+                res = result.cursor.fetch_logs()
+                if len(res) > 0:
+                    raise Exception("\n".join(res))
                 end = time.time()
                 elapsed_time = self.format_time(start, end)
                 if result is not None and result.returns_rows is True:
@@ -260,8 +265,7 @@ def df_to_html(df):
 
 
 def refactor(oe):
-    error_string = "error_code: {}\nsql_state: {}\nerror_message: {} full_message {}".format(oe.orig.args[0].status.errorCode,
+    error_string = "error_code: {}\nsql_state: {}\nerror_message: {}".format(oe.orig.args[0].status.errorCode,
                                                                              oe.orig.args[0].status.sqlState,
-                                                                             oe.orig.args[0].status.errorMessage,
-                                                                             str(oe.orig.args[0].status))
+                                                                             oe.orig.args[0].status.errorMessage)
     return error_string

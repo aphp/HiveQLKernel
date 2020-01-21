@@ -1,5 +1,5 @@
 import os
-__version__ = '1.0.16'
+__version__ = '1.0.18'
 
 KERNEL_NAME = 'hiveql'
 LANGUAGE = 'hiveql'
