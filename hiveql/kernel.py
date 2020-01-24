@@ -48,6 +48,7 @@ $$ display_mode=be # -> this will display a table with the beginning (b) and end
 """
 
 
+# DOCUMENTATION here: https://ipython.readthedocs.io/en/stable/development/wrapperkernels.html
 class ConnectionNotCreated(Exception):
     def __init__(self):
         Exception.__init__(self, error_con_not_created)
