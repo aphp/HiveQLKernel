@@ -76,6 +76,20 @@ class HiveQLKernel(Kernel):
         with open(conf_file, mode='r') as file_hanlde:
             conf = json.load(file_hanlde)
 
+    def __init__(self, **kwargs):
+        conf_file = os.path.expanduser(CONFIG_FILE)
+        if os.path.isfile(conf_file):
+            with open(conf_file, mode='r') as file_hanlde:
+                self.conf = json.load(file_hanlde)
+        pyhiveconf, sql_req = self.parse_code(code="")
+
+        self.create_conn(**pyhiveconf)
+
+        #if self.last_conn is None:
+        #    raise ConnectionNotCreated()
+
+        Kernel.__init__(self, **kwargs)
+
     def send_exception(self, e):
         if type(e) in [ConnectionNotCreated]:
             tb = ""
@@ -102,17 +116,17 @@ class HiveQLKernel(Kernel):
         })
 
     def create_conn(self, url, **kwargs):
-        self.send_info("create_engine('" + url + "', " + ', '.join(
-            [str(k) + '=' + (str(v) if type(v) == str else json.dumps(v)) for k, v in kwargs.items()]) + ")\n")
+        #self.send_info("create_engine('" + url + "', " + ', '.join(
+        #    [str(k) + '=' + (str(v) if type(v) == str else json.dumps(v)) for k, v in kwargs.items()]) + ")\n")
         self.last_conn = create_engine(url,**kwargs)
         self.last_conn.connect()
-        self.send_info("Connection established to database!\n")
+        #self.send_info("Connection established to database!\n")
 
     def reconfigure(self, params):
         if 'default_limit' in params:
             try:
                 self.params['default_limit'] = int(params['default_limit'])
-                self.send_info("Set display limit to {}\n".format(self.params['default_limit']))
+         #       self.send_info("Set display limit to {}\n".format(self.params['default_limit']))
             except ValueError as e:
                 self.send_exception(e)
         if 'display_mode' in params:
@@ -269,3 +283,10 @@ def refactor(oe):
                                                                              oe.orig.args[0].status.sqlState,
                                                                              oe.orig.args[0].status.errorMessage)
     return error_string
+
+def do_shutdown(self, restart):
+    """Cleanup the created source code files and executables when shutting down the kernel"""
+    self.last_conn.disconnect()
+    if restart:
+        self.last_conn.connect()
+        
