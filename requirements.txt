@@ -1,7 +1,7 @@
 ipykernel==4.*
 jupyter_client==5.*
 jupyter_core==4.*
-pandas==0.23.*
+pandas
 pyhive==0.6.*
 sasl==0.2.*
 thrift_sasl==0.3.*
